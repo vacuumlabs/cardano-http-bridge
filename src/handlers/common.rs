@@ -4,7 +4,7 @@ use iron::Request;
 use router::Router;
 
 pub fn validate_network_name(v: &&str) -> bool {
-    v.chars().all(|c| c.is_ascii_alphanumeric())
+    v.chars().all(|c| c.is_ascii_alphanumeric() || c == '-')
 }
 
 pub fn validate_epochid(v: &&str) -> Option<EpochId> {

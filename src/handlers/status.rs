@@ -32,7 +32,7 @@ impl iron::Handler for Handler {
             Some((_, n)) => n,
         };
 
-        let (local_tip_json, net_tip_json) = match &net.storage.read() {
+        let (local_tip_json, net_tip_json, packed_epochs_count) = match &net.storage.read() {
             Ok(storage) => {
                 let local_tip_json = match storage.get_block_from_tag(tag::HEAD) {
                     Ok(b) => Some(json!({
@@ -53,7 +53,8 @@ impl iron::Handler for Handler {
                         "hash": hex::encode(&header_to_blockhash(&tip.compute_hash())),
                     })
                 });
-                (local_tip_json, net_tip_json)
+                let packed_epochs_count = storage.packed_epochs_len();
+                (local_tip_json, net_tip_json, packed_epochs_count)
             }
             Err(err) => panic!("Failed to read from storage! {}", err),
         };
@@ -62,7 +63,8 @@ impl iron::Handler for Handler {
             "tip": {
                 "local": local_tip_json,
                 "remote": net_tip_json,
-            }
+            },
+            "packedEpochs": packed_epochs_count,
         });
 
         return Ok(Response::with((status::Ok, resp.to_string())));

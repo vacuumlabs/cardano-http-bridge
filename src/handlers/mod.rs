@@ -9,3 +9,4 @@ pub mod pack;
 pub mod status;
 pub mod tip;
 pub mod tx;
+pub mod utxos;

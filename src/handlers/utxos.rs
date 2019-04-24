@@ -1,6 +1,6 @@
 use cardano_storage::{chain_state, tag, Error};
+use exe_common::genesisdata;
 use exe_common::network::BlockRef;
-use exe_common::{genesisdata, sync};
 
 use std::sync::Arc;
 
@@ -119,8 +119,8 @@ mod tests {
     use cardano::tx::TxoPointer;
     use std::collections::BTreeMap;
 
-    static BASE58_ADDRESS : &str = "DdzFFzCqrhsjcfsReoiHddtt3ih6YusHbNXMTAjCvi5vakqk6sHkXDbMkaYgAbZyiy6hNK4761cF33AaCog93vbwgXGEXKgmA52dhrhJ";
-    static BYTES : [u8; 32] = [0u8; 32];
+    static BASE58_ADDRESS: &str = "DdzFFzCqrhsjcfsReoiHddtt3ih6YusHbNXMTAjCvi5vakqk6sHkXDbMkaYgAbZyiy6hNK4761cF33AaCog93vbwgXGEXKgmA52dhrhJ";
+    static BYTES: [u8; 32] = [0u8; 32];
 
     #[test]
     fn filter_existent_address() {

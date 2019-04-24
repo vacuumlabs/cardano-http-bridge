@@ -42,6 +42,11 @@ impl iron::Handler for Handler {
             .parse::<u64>()
             .expect(&format!("Failed to parse block height: {}", height_str));
 
+        if height == 0 {
+            error!("invalid block height: {}", height_str);
+            return Ok(Response::with(status::BadRequest));
+        }
+
         let storage = &(net.storage).read().unwrap();
         match storage.block_location_by_height(height) {
             Err(_) => {

@@ -1,7 +1,8 @@
 use super::config::{Config, Network, Networks};
 use super::handlers;
-use exe_common::config::net;
-use exe_common::{genesisdata, sync};
+use protocol::Error::NttError;
+use cardano_storage::tag;
+use exe_common::{config::net, genesisdata, sync};
 use iron;
 use router::Router;
 use std::sync::Arc;
@@ -73,12 +74,57 @@ fn refresh_network(label: &str, net: &mut Network) {
         genesisdata::parse::parse(genesis_data.as_bytes())
     };
 
-    sync::net_sync(
-        &mut sync::get_peer(&label, &net_cfg, true),
-        &net_cfg,
-        &genesis_data,
-        net.storage.clone(),
-        false,
-    )
-    .unwrap_or_else(|err| warn!("Sync failed: {:?}", err));
+    let max_sync_attempts = 8;
+    let mut sync_attempts = 1;
+    let mut latest_tip = match net.storage.read().unwrap().get_block_from_tag(&tag::HEAD) {
+        Ok(block) => Some(block.header().compute_hash()),
+        Err(_) => None,
+    };
+
+    loop {
+        // Some networking errors can occur occasionally - in these cases, simply retry
+        match sync::net_sync(
+            &mut sync::get_peer(&label, &net_cfg, true),
+            &net_cfg,
+            &genesis_data,
+            net.storage.clone(),
+            false,
+        ) {
+            Ok(()) => unreachable!(),
+            Err(e) => {
+                if let exe_common::network::Error::ProtocolError(NttError(e)) = &e {
+                    if format!("{:?}", &e).contains("failed to fill whole buffer") {
+                        let new_latest_tip =
+                            match net.storage.read().unwrap().get_block_from_tag(&tag::HEAD) {
+                                Ok(block) => Some(block.header().compute_hash()),
+                                Err(_) => None,
+                            };
+                        // TODO: remove after network error during sync testing
+                        info!("latest_tip     = {:?}", latest_tip);
+                        info!("new_latest_tip = {:?}", new_latest_tip);
+                        if new_latest_tip != latest_tip {
+                            latest_tip = new_latest_tip;
+                            sync_attempts = 1;
+                        }
+                        if sync_attempts < max_sync_attempts {
+                            let delay = 10 * (1 << sync_attempts);
+                            warn!(
+                                "networking error in net.get_blocks() - attempt {} / {}, waiting {} seconds",
+                                sync_attempts, max_sync_attempts, delay
+                            );
+                            std::thread::sleep(Duration::from_secs(delay));
+                            sync_attempts += 1;
+                            continue;
+                        } else {
+                            panic!(
+                                "max sync attempts ({}) reached for epoch",
+                                max_sync_attempts
+                            );
+                        }
+                    }
+                }
+                panic!("Sync failed: {:?}", e);
+            }
+        };
+    }
 }

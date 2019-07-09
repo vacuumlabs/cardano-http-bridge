@@ -61,6 +61,83 @@ Example:
 wget http://localhost:8080/mainnet/epoch/2
 ```
 
+## GET: `/:network/height/:blockHeight`
+
+This allows you to query a single block in its binary format.
+
+* `:network` is any of the network passed to the `--template` options at startup.
+* `:blockHeight` the height of the queried block (starting from 1, cuz a chain of one block has a height of 1)
+
+:warning: Note that Epoch-Boundary-Blocks are not semantically a part of the chain, because they don't increase the block `difficulty` number, and therefore they technically **cannot** be queried by this endpoint. Althought full epochs, returned by the `/epoch/:epochId` endpoint do contain EBB, because they are semantically a part of an epoch.
+
+Example:
+
+```
+wget http://localhost:8080/mainnet/height/45000
+```
+
+## GET: `/:network/status`
+
+This allows you to query the current status of the bridge syncing.
+
+Example:
+
+```
+wget http://localhost:8080/mainnet/status
+```
+
+Response format:
+
+```
+{
+  "tip": {
+    "local": {
+      "slot": [<Epoch>, <Slot>],
+      "height": <Height>,
+      "hash": <Hash>
+    },
+    "remote": {
+      "slot": [<Epoch>, <Slot>],
+      "height": <Height>,
+      "hash": <Hash>
+    }
+  },
+  "packedEpochs": <PackedEpochs>
+}
+```
+
+Where:
+- `<Epoch>` - integer number of the tip epoch (0+)
+- `<Slot>` - inetger number of the tip in-epoch slott (currently between 0 and 21599)
+- `<Height>` - integer number of the tip block height (1+)
+- `<Hash>` - string tip block ID hash
+- `<PackedEpochs>` - integer number of how many consequent epochs bridge already has in a packed form. Endpoint to query full epochs will only return you a full epoch if it has been fully packed, and bridge implements somewhat complex logic on when previous finished epochs get packed, depending on the network stability parameter, so you can use this status field to quickly check whether it's possible to query some full epoch.
+
+Example response:
+```
+{
+  "packedEpochs": 57,
+  "tip": {
+    "local": {
+      "hash": "48047eb233168def823a1085ee324d34a6412dfbb7374f310d6548e3309a33d8",
+      "height": 1236900,
+      "slot": [
+        57,
+        5822
+      ]
+    },
+    "remote": {
+      "hash": "400e86695f7e1187fbcf862021820d8815aaf58f39b044b7aca43bb00fe1ee16",
+      "height": 1237072,
+      "slot": [
+        57,
+        5994
+      ]
+    }
+  }
+}
+```
+
 ## GET: `/:network/genesis/:hash`
 
 This allows you to query a genesis file, if you know the hash of the genesis file you can query it here:

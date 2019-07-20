@@ -1,9 +1,9 @@
 use super::config::{Config, Network, Networks};
 use super::handlers;
-use protocol::Error::NttError;
 use cardano_storage::tag;
 use exe_common::{config::net, genesisdata, sync};
 use iron;
+use protocol::Error::NttError;
 use router::Router;
 use std::sync::Arc;
 use std::thread;
@@ -90,6 +90,8 @@ fn refresh_network(label: &str, net: &mut Network) {
             net.storage.clone(),
             false,
         ) {
+            // net_sync() is configured to sync undefinitely with sync_once = false
+            // and thus only terminates upon returning an error
             Ok(()) => unreachable!(),
             Err(e) => {
                 if let exe_common::network::Error::ProtocolError(NttError(e)) = &e {
@@ -99,9 +101,6 @@ fn refresh_network(label: &str, net: &mut Network) {
                                 Ok(block) => Some(block.header().compute_hash()),
                                 Err(_) => None,
                             };
-                        // TODO: remove after network error during sync testing
-                        info!("latest_tip     = {:?}", latest_tip);
-                        info!("new_latest_tip = {:?}", new_latest_tip);
                         if new_latest_tip != latest_tip {
                             latest_tip = new_latest_tip;
                             sync_attempts = 1;

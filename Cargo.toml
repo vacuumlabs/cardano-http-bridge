@@ -20,6 +20,7 @@ The Cardano HTTP bridge
 cardano         = { path = "cardano-deps/cardano" }
 cardano-storage = { path = "cardano-deps/storage" }
 exe-common      = { path = "cardano-deps/exe-common" }
+protocol        = { path = "cardano-deps/protocol" }
 
 serde = "1.0"
 serde_derive = "1.0"

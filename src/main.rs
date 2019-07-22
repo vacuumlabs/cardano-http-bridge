@@ -13,6 +13,7 @@ extern crate router;
 extern crate cardano;
 extern crate cardano_storage;
 extern crate exe_common;
+extern crate protocol;
 
 use std::path::{Path, PathBuf};
 

@@ -97,7 +97,7 @@ fn main() {
                     "mainnet" => net::Config::mainnet(),
                     "staging" => net::Config::staging(),
                     "testnet" => net::Config::testnet(),
-                    "obft-testnet" => net::Config::obft_testnet(),
+                    "testnet2" => net::Config::testnet2(),
                     filepath => {
                         let path = Path::new(filepath);
                         match net::Config::from_file(path) {

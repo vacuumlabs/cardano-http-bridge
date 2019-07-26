@@ -14,7 +14,10 @@ extern crate cardano;
 extern crate cardano_storage;
 extern crate exe_common;
 
-use std::path::{Path, PathBuf};
+use std::path::{
+    PathBuf,
+    Path,
+};
 
 mod config;
 mod handlers;
@@ -25,10 +28,6 @@ use exe_common::config::net;
 
 fn main() {
     use clap::{App, Arg, SubCommand};
-
-    env_logger::Builder::from_default_env()
-        .filter_level(log::LevelFilter::Info)
-        .init();
 
     let matches = App::new(crate_name!())
         .version(crate_version!())
@@ -62,18 +61,53 @@ fn main() {
                         .help("either 'mainnet' or 'testnet'; may be given multiple times")
                         .required(false)
                         .multiple(true)
-                        .default_value("mainnet"),
+                        .default_value("mainnet")
                 )
                 .arg(
                     Arg::with_name("no-sync")
                         .long("no-sync")
                         .help("disable synchronizing with the upstream network"),
+                )
+                .arg(
+                    Arg::with_name("verbose")
+                        .long("verbose")
+                        .help("display debugging information in the log output"),
+                )
+                .arg(
+                    Arg::with_name("quiet")
+                        .long("quiet")
+                        .help("suppress all log output apart from errors"),
+                )
+                .arg(
+                    Arg::with_name("silent")
+                        .long("silent")
+                        .help("suppress all log output"),
                 ),
         )
         .get_matches();
 
     match matches.subcommand() {
         ("start", Some(args)) => {
+
+            // Determine the verbosity of logging:
+            let arg_verbose = args.is_present("verbose");
+            let arg_quiet   = args.is_present("quiet");
+            let arg_silent  = args.is_present("silent");
+
+            let log_filter_level = match (arg_verbose, arg_quiet, arg_silent) {
+                (false, false, false) => {log::LevelFilter::Info}  // Default
+                (true , false, false) => {log::LevelFilter::Trace} // Verbose
+                (false, true , false) => {log::LevelFilter::Error} // Quiet
+                (false, false, true ) => {log::LevelFilter::Off}   // Silent
+                _                     =>
+                    {panic!("Error: At most one of the following arguments \
+                             may be specified: --verbose --quiet --silent")}
+            };
+
+            env_logger::Builder::from_default_env()
+                .filter_level(log_filter_level)
+                .init();
+
             let mut cfg = Config::new(
                 PathBuf::from(
                     value_t!(args.value_of("NETWORKS DIRECTORY"), String).unwrap_or(
@@ -96,8 +130,7 @@ fn main() {
                     "mainnet" => net::Config::mainnet(),
                     "staging" => net::Config::staging(),
                     "testnet" => net::Config::testnet(),
-                    "obft-testnet" => net::Config::obft_testnet(),
-                    filepath => {
+                    filepath  => {
                         let path = Path::new(filepath);
                         match net::Config::from_file(path) {
                             None => panic!("unknown or missing template '{}'", template),

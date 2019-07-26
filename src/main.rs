@@ -130,7 +130,7 @@ fn main() {
                     "mainnet" => net::Config::mainnet(),
                     "staging" => net::Config::staging(),
                     "testnet" => net::Config::testnet(),
-                    filepath  => {
+                    filepath => {
                         let path = Path::new(filepath);
                         match net::Config::from_file(path) {
                             None => panic!("unknown or missing template '{}'", template),

@@ -69,7 +69,7 @@ impl iron::Handler for Handler {
                 Error::ProtocolError(e) => {
                     return Ok(Response::with((
                         status::BadRequest,
-                        format!("Transaction failed protocol validation: {:?}", e),
+                        format!("Transaction failed protocol: {:?}", e),
                     )));
                 }
                 _ => {

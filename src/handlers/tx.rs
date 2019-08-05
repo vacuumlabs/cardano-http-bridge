@@ -12,7 +12,7 @@ use serde_json;
 
 use super::super::config::Networks;
 use super::common;
-use exe_common::{config::net, network::Api, sync};
+use exe_common::{config::net, network::Api, network::Error, sync};
 
 pub struct Handler {
     networks: Arc<Networks>,
@@ -59,17 +59,25 @@ impl iron::Handler for Handler {
         if let Err(verify_error) = txaux.verify(net_cfg.protocol_magic) {
             return Ok(Response::with((
                 status::BadRequest,
-                format!("Transaction failed verification: {}", verify_error),
+                format!("Transaction failed verification: {:?}", verify_error),
             )));
         }
 
         let mut peer = sync::get_peer(&net_name, &net_cfg, true);
         match peer.send_transaction(txaux) {
-            Err(e) => {
-                return Ok(Response::with((
-                    status::InternalServerError,
-                    format!("Failed to send to peers: {}", e),
-                )));
+            Err(e) => match e {
+                Error::ProtocolError(e) => {
+                    return Ok(Response::with((
+                        status::BadRequest,
+                        format!("Transaction failed protocol validation: {:?}", e),
+                    )));
+                }
+                _ => {
+                    return Ok(Response::with((
+                        status::InternalServerError,
+                        format!("Failed to send to peers: {:?}", e),
+                    )));
+                }
             }
             Ok(value) => assert!(value),
         };

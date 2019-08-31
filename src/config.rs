@@ -1,4 +1,5 @@
 use serde_yaml;
+use dirs;
 
 use cardano_storage::config::StorageConfig;
 use cardano_storage::{self, Storage};
@@ -6,7 +7,7 @@ use exe_common::config::net;
 use std::collections::HashSet;
 use std::{collections::BTreeMap, num::ParseIntError, sync::Arc, sync::RwLock};
 use std::{
-    env::{self, home_dir, VarError},
+    env::{self, VarError},
     io,
     path::{Path, PathBuf},
     result,
@@ -186,7 +187,7 @@ pub static HERMES_HOME_PATH: &'static str = ".hermes";
 pub fn hermes_path() -> Result<PathBuf> {
     match env::var(HERMES_PATH_ENV) {
         Ok(path) => Ok(PathBuf::from(path)),
-        Err(VarError::NotPresent) => match home_dir() {
+        Err(VarError::NotPresent) => match dirs::home_dir() {
             None => Err(Error::BlockchainConfigError("no home directory to base hermes root dir. Set `HERMES_PATH' variable environment to fix the problem.")),
             Some(path) => Ok(path.join(HERMES_HOME_PATH))
         },

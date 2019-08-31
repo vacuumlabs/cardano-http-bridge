@@ -25,7 +25,7 @@ Options:
 
 * `--networks-dir <NETWORKS DIRECTORY>`    the relative or absolute directory of the networks to server, default is under the `${HOME}/.hermes/networks/` directory
 * `--port <PORT NUMBER>`                   set the port number to listen to [default: 80]
-* `--template <TEMPLATE>...`               either 'mainnet' or 'testnet'; may be given multiple times [default: mainnet]  [possible values: mainnet, staging, testnet]
+* `--template <TEMPLATE>...`               either 'mainnet' or 'testnet2'; may be given multiple times [default: mainnet]  [possible values: mainnet, staging, testnet2]
 
 Example, if you wish the http-bridge to server mainnet and staging:
 

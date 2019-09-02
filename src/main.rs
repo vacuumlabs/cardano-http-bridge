@@ -130,7 +130,6 @@ fn main() {
                 let net_cfg = match template {
                     "mainnet" => net::Config::mainnet(),
                     "staging" => net::Config::staging(),
-                    "testnet" => net::Config::testnet(),
                     "testnet2" => net::Config::testnet2(),
                     filepath => {
                         let path = Path::new(filepath);
